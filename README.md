@@ -1,6 +1,10 @@
 # Alloy-EVM
 
-TBD
+## Overview
+
+Contains EVM abstractions compatible with types from the alloy ecosystem.
+Comes with batteries included for block execution.
+Compatible with no_std and riscv targets.
 
 #### License
 
