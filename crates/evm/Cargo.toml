@@ -19,4 +19,6 @@ alloy-consensus.workspace = true
 
 [features]
 default = ["std"]
-std = []
+std = [
+	"alloy-consensus/std"
+]
