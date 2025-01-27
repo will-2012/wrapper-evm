@@ -24,9 +24,15 @@ serde = { workspace = true, optional = true }
 [features]
 default = ["std"]
 std = [
-	"alloy-primitives/std"
+	"alloy-primitives/std",
+	"alloy-chains/std",
+	"alloy-eip2124/std",
+	"derive_more/std",
+	"serde?/std"
 ]
 serde = [
 	"dep:serde",
-	"alloy-primitives/serde"
+	"alloy-primitives/serde",
+	"alloy-chains/serde",
+	"alloy-eip2124/serde"
 ]

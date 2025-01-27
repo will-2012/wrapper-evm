@@ -7,5 +7,14 @@
 #![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 #![cfg_attr(not(feature = "std"), no_std)]
 
+extern crate alloc;
+
 pub mod block;
 pub mod evm;
+pub use evm::{Evm, EvmFactory};
+pub mod eth;
+pub use eth::{EthEvm, EthEvmFactory};
+pub mod env;
+pub use env::EvmEnv;
+#[cfg(feature = "optimism")]
+pub mod op;
