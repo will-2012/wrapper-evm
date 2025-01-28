@@ -89,7 +89,7 @@ jobs:
           cache-on-failure: true
       - name: cargo hack
         run: |
-          cargo hack build --workspace --ignore-unknown-features --features ws --target wasm32-unknown-unknown
+          cargo hack build --workspace --ignore-unknown-features --features ws --target wasm32-unknown-unknown --no-default-features
 
   wasm-wasi:
     runs-on: ubuntu-latest
