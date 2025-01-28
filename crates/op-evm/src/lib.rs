@@ -9,8 +9,8 @@
 // The `optimism` feature must be enabled to use this crate.
 #![cfg(feature = "optimism")]
 
-use alloy_evm::{Evm, EvmEnv, EvmFactory};
 use alloc::vec::Vec;
+use alloy_evm::{Evm, EvmEnv, EvmFactory};
 use alloy_primitives::{Address, Bytes, TxKind, U256};
 use core::fmt::Debug;
 use revm::{
