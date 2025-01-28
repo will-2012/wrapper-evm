@@ -1,6 +1,15 @@
-//! Optimism EVM implementation.
+#![doc = include_str!("../README.md")]
+#![doc(
+    html_logo_url = "https://raw.githubusercontent.com/alloy-rs/core/main/assets/alloy.jpg",
+    html_favicon_url = "https://raw.githubusercontent.com/alloy-rs/core/main/assets/favicon.ico"
+)]
+#![cfg_attr(all(not(test), feature = "optimism"), warn(unused_crate_dependencies))]
+#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
+#![cfg_attr(not(feature = "std"), no_std)]
+// The `optimism` feature must be enabled to use this crate.
+#![cfg(feature = "optimism")]
 
-use crate::{Evm, EvmEnv, EvmFactory};
+use alloy_evm::{Evm, EvmEnv, EvmFactory};
 use alloc::vec::Vec;
 use alloy_primitives::{Address, Bytes, TxKind, U256};
 use core::fmt::Debug;
@@ -11,6 +20,8 @@ use revm::{
     },
     Database, GetInspector,
 };
+
+extern crate alloc;
 
 /// OP EVM implementation.
 #[derive(derive_more::Debug, derive_more::Deref, derive_more::DerefMut, derive_more::From)]

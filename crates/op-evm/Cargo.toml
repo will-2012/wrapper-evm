@@ -1,6 +1,6 @@
 [package]
-name = "alloy-evm"
-description = "EVM abstraction for Alloy"
+name = "alloy-op-evm"
+description = "OP EVM implementation"
 
 version.workspace = true
 edition.workspace = true
@@ -15,6 +15,7 @@ workspace = true
 
 [dependencies]
 alloy-primitives.workspace = true
+alloy-evm.workspace = true
 derive_more.workspace = true
 revm.workspace = true
 
@@ -26,3 +27,4 @@ std = [
 	"derive_more/std",
 	"revm/std"
 ]
+optimism = ["revm/optimism"]

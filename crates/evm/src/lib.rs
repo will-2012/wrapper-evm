@@ -16,5 +16,3 @@ pub mod eth;
 pub use eth::{EthEvm, EthEvmFactory};
 pub mod env;
 pub use env::EvmEnv;
-#[cfg(feature = "optimism")]
-pub mod op;
