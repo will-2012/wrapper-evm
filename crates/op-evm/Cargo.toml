@@ -1,6 +1,6 @@
 [package]
-name = "alloy-evm-spec"
-description = "EVM specification"
+name = "alloy-op-evm"
+description = "OP EVM implementation"
 
 version.workspace = true
 edition.workspace = true
@@ -14,25 +14,17 @@ repository.workspace = true
 workspace = true
 
 [dependencies]
-alloy-eip2124.workspace = true
-alloy-chains.workspace = true
 alloy-primitives.workspace = true
-
+alloy-evm.workspace = true
 derive_more.workspace = true
-serde = { workspace = true, optional = true }
+revm.workspace = true
+
 
 [features]
 default = ["std"]
 std = [
 	"alloy-primitives/std",
-	"alloy-chains/std",
-	"alloy-eip2124/std",
 	"derive_more/std",
-	"serde?/std"
+	"revm/std"
 ]
-serde = [
-	"dep:serde",
-	"alloy-primitives/serde",
-	"alloy-chains/serde",
-	"alloy-eip2124/serde"
-]
+optimism = ["revm/optimism"]
