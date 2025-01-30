@@ -25,6 +25,7 @@ default = ["std"]
 std = [
 	"alloy-primitives/std",
 	"derive_more/std",
-	"revm/std"
+	"revm/std",
+	"alloy-evm/std"
 ]
 optimism = ["revm/optimism"]
