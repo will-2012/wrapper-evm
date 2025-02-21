@@ -1,6 +1,6 @@
 //! Abstraction over EVM.
 
-use crate::EvmError;
+use crate::{EvmError, IntoTxEnv};
 use alloy_primitives::{Address, Bytes};
 use core::error::Error;
 use revm::{
@@ -27,6 +27,10 @@ pub trait Evm {
     /// Database type held by the EVM.
     type DB;
     /// The transaction object that the EVM will execute.
+    ///
+    /// Implementations are expected to rely on a single entrypoint for transaction execution such
+    /// as [`revm::context::TxEnv`]. The actual set of valid inputs is not limited by allowing to
+    /// provide any [`IntoTxEnv`] implementation for [`Evm::transact`] method.
     type Tx;
     /// Error type returned by EVM. Contains either errors related to invalid transactions or
     /// internal irrecoverable execution errors.
@@ -40,7 +44,19 @@ pub trait Evm {
     fn block(&self) -> &BlockEnv;
 
     /// Executes a transaction and returns the outcome.
-    fn transact(&mut self, tx: Self::Tx) -> Result<ResultAndState<Self::HaltReason>, Self::Error>;
+    fn transact_raw(
+        &mut self,
+        tx: Self::Tx,
+    ) -> Result<ResultAndState<Self::HaltReason>, Self::Error>;
+
+    /// Same as [`Evm::transact_raw`], but takes a [`IntoTxEnv`] implementation, thus allowing to
+    /// support transacting with an external type.
+    fn transact(
+        &mut self,
+        tx: impl IntoTxEnv<Self::Tx>,
+    ) -> Result<ResultAndState<Self::HaltReason>, Self::Error> {
+        self.transact_raw(tx.into_tx_env())
+    }
 
     /// Executes a system call.
     fn transact_system_call(
@@ -56,12 +72,12 @@ pub trait Evm {
     /// Executes a transaction and commits the state changes to the underlying database.
     fn transact_commit(
         &mut self,
-        tx_env: Self::Tx,
+        tx: impl IntoTxEnv<Self::Tx>,
     ) -> Result<ResultAndState<Self::HaltReason>, Self::Error>
     where
         Self::DB: DatabaseCommit,
     {
-        let result = self.transact(tx_env)?;
+        let result = self.transact(tx)?;
         self.db_mut().commit(result.state.clone());
 
         Ok(result)
