@@ -12,6 +12,13 @@ pub use error::*;
 mod state_hook;
 pub use state_hook::*;
 
+pub mod system_calls;
+pub use system_calls::*;
+
+pub mod state_changes;
+
+pub mod calc;
+
 /// The result of executing a block.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct BlockExecutionResult<T> {
