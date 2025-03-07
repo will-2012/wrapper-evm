@@ -24,18 +24,18 @@ mod eip7251;
 ///
 /// This can be used to chain system transaction calls.
 #[derive(derive_more::Debug)]
-pub struct SystemCaller<ChainSpec> {
-    chain_spec: ChainSpec,
+pub struct SystemCaller<Spec> {
+    spec: Spec,
     /// Optional hook to be called after each state change.
     #[debug(skip)]
     hook: Option<Box<dyn OnStateHook>>,
 }
 
-impl<ChainSpec> SystemCaller<ChainSpec> {
+impl<Spec> SystemCaller<Spec> {
     /// Create a new system caller with the given EVM config, database, and chain spec, and creates
     /// the EVM with the given initialized config and block environment.
-    pub const fn new(chain_spec: ChainSpec) -> Self {
-        Self { chain_spec, hook: None }
+    pub const fn new(spec: Spec) -> Self {
+        Self { spec, hook: None }
     }
 
     /// Installs a custom hook to be called after each state change.
@@ -43,14 +43,11 @@ impl<ChainSpec> SystemCaller<ChainSpec> {
         self.hook = hook;
         self
     }
-
-    /// Convenience method to consume the type and drop borrowed fields
-    pub fn finish(self) {}
 }
 
-impl<Chainspec> SystemCaller<Chainspec>
+impl<Spec> SystemCaller<Spec>
 where
-    Chainspec: EthereumHardforks,
+    Spec: EthereumHardforks,
 {
     /// Apply pre execution changes.
     pub fn apply_pre_execution_changes(
@@ -93,7 +90,7 @@ where
         evm: &mut impl Evm<DB: DatabaseCommit>,
     ) -> Result<(), BlockExecutionError> {
         let result_and_state =
-            eip2935::transact_blockhashes_contract_call(&self.chain_spec, parent_block_hash, evm)?;
+            eip2935::transact_blockhashes_contract_call(&self.spec, parent_block_hash, evm)?;
 
         if let Some(res) = result_and_state {
             if let Some(hook) = &mut self.hook {
@@ -114,11 +111,8 @@ where
         parent_beacon_block_root: Option<B256>,
         evm: &mut impl Evm<DB: DatabaseCommit>,
     ) -> Result<(), BlockExecutionError> {
-        let result_and_state = eip4788::transact_beacon_root_contract_call(
-            &self.chain_spec,
-            parent_beacon_block_root,
-            evm,
-        )?;
+        let result_and_state =
+            eip4788::transact_beacon_root_contract_call(&self.spec, parent_beacon_block_root, evm)?;
 
         if let Some(res) = result_and_state {
             if let Some(hook) = &mut self.hook {
@@ -178,6 +172,19 @@ where
         if let Some(hook) = &mut self.hook {
             hook.on_state(source, state);
         }
+    }
+
+    /// Invokes the state hook with the outcome of the given closure, forwards error if any.
+    pub fn try_on_state_with<'a, F, E>(&mut self, f: F) -> Result<(), E>
+    where
+        F: FnOnce() -> Result<(StateChangeSource, Cow<'a, EvmState>), E>,
+    {
+        self.invoke_hook_with(|hook| {
+            let (source, state) = f()?;
+            hook.on_state(source, &state);
+            Ok(())
+        })
+        .unwrap_or(Ok(()))
     }
 
     /// Invokes the state hook with the outcome of the given closure.
