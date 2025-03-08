@@ -242,8 +242,18 @@ pub struct EthBlockExecutorFactory<
 impl<R, Spec, EvmFactory> EthBlockExecutorFactory<R, Spec, EvmFactory> {
     /// Creates a new [`EthBlockExecutorFactory`] with the given spec, [`EvmFactory`], and
     /// [`ReceiptBuilder`].
-    pub const fn new(spec: Spec, evm_factory: EvmFactory, receipt_builder: R) -> Self {
+    pub const fn new(receipt_builder: R, spec: Spec, evm_factory: EvmFactory) -> Self {
         Self { receipt_builder, spec, evm_factory }
+    }
+
+    /// Exposes the chain specification.
+    pub const fn spec(&self) -> &Spec {
+        &self.spec
+    }
+
+    /// Exposes the EVM factory.
+    pub const fn evm_factory(&self) -> &EvmFactory {
+        &self.evm_factory
     }
 }
 
