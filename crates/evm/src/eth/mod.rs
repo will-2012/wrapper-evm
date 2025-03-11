@@ -30,7 +30,7 @@ pub type EthEvmContext<DB> = Context<BlockEnv, TxEnv, CfgEnv, DB>;
 
 /// Ethereum EVM implementation.
 #[expect(missing_debug_implementations)]
-pub struct EthEvm<DB: Database, I, PRECOMPILE = EthPrecompiles<EthEvmContext<DB>>> {
+pub struct EthEvm<DB: Database, I, PRECOMPILE = EthPrecompiles> {
     inner: RevmEvm<
         EthEvmContext<DB>,
         I,
@@ -71,6 +71,11 @@ impl<DB: Database, I, PRECOMPILE> EthEvm<DB, I, PRECOMPILE> {
     pub fn ctx_mut(&mut self) -> &mut EthEvmContext<DB> {
         &mut self.inner.data.ctx
     }
+
+    /// Provides a mutable reference to the EVM inspector.
+    pub fn inspector_mut(&mut self) -> &mut I {
+        &mut self.inner.data.inspector
+    }
 }
 
 impl<DB: Database, I, PRECOMPILE> Deref for EthEvm<DB, I, PRECOMPILE> {
@@ -93,7 +98,7 @@ impl<DB, I, PRECOMPILE> Evm for EthEvm<DB, I, PRECOMPILE>
 where
     DB: Database,
     I: Inspector<EthEvmContext<DB>>,
-    PRECOMPILE: PrecompileProvider<Context = EthEvmContext<DB>, Output = InterpreterResult>,
+    PRECOMPILE: PrecompileProvider<EthEvmContext<DB>, Output = InterpreterResult>,
 {
     type DB = DB;
     type Tx = TxEnv;
