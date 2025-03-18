@@ -188,6 +188,10 @@ where
 
         (journaled_state.database, EvmEnv { block_env, cfg_env })
     }
+
+    fn set_inspector_enabled(&mut self, enabled: bool) {
+        self.inspect = enabled;
+    }
 }
 
 /// Factory producing [`EthEvm`].
