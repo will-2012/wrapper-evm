@@ -10,13 +10,13 @@ use crate::{
     block::{
         state_changes::{balance_increment_state, post_block_balance_increments},
         BlockExecutionError, BlockExecutionResult, BlockExecutor, BlockExecutorFactory,
-        BlockExecutorFor, BlockValidationError, OnStateHook, StateChangePostBlockSource,
-        StateChangeSource, SystemCaller,
+        BlockExecutorFor, BlockValidationError, ExecutableTx, OnStateHook,
+        StateChangePostBlockSource, StateChangeSource, SystemCaller,
     },
     Database, Evm, EvmFactory, FromRecoveredTx,
 };
 use alloc::{borrow::Cow, boxed::Box, vec::Vec};
-use alloy_consensus::{transaction::Recovered, Header, Transaction, TxReceipt};
+use alloy_consensus::{Header, Transaction, TxReceipt};
 use alloy_eips::{eip4895::Withdrawals, eip7685::Requests, Encodable2718};
 use alloy_hardforks::EthereumHardfork;
 use alloy_primitives::{Log, B256};
@@ -104,23 +104,26 @@ where
 
     fn execute_transaction_with_result_closure(
         &mut self,
-        tx: Recovered<&R::Transaction>,
+        tx: impl ExecutableTx<Self>,
         f: impl FnOnce(&ExecutionResult<<Self::Evm as Evm>::HaltReason>),
     ) -> Result<u64, BlockExecutionError> {
         // The sum of the transaction's gas limit, Tg, and the gas utilized in this block prior,
         // must be no greater than the block's gasLimit.
         let block_available_gas = self.evm.block().gas_limit - self.gas_used;
-        if tx.gas_limit() > block_available_gas {
+
+        if tx.tx().gas_limit() > block_available_gas {
             return Err(BlockValidationError::TransactionGasLimitMoreThanAvailableBlockGas {
-                transaction_gas_limit: tx.gas_limit(),
+                transaction_gas_limit: tx.tx().gas_limit(),
                 block_available_gas,
             }
             .into());
         }
 
         // Execute transaction.
-        let result_and_state =
-            self.evm.transact(tx).map_err(|err| BlockExecutionError::evm(err, tx.trie_hash()))?;
+        let result_and_state = self
+            .evm
+            .transact(tx)
+            .map_err(|err| BlockExecutionError::evm(err, tx.tx().trie_hash()))?;
         self.system_caller
             .on_state(StateChangeSource::Transaction(self.receipts.len()), &result_and_state.state);
         let ResultAndState { result, state } = result_and_state;
@@ -134,7 +137,7 @@ where
 
         // Push transaction changeset and calculate header bloom filter for receipt.
         self.receipts.push(self.receipt_builder.build_receipt(ReceiptBuilderCtx {
-            tx: &tx,
+            tx: tx.tx(),
             evm: &self.evm,
             result,
             state: &state,
