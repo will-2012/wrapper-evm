@@ -6,7 +6,7 @@ use alloy_consensus::{
 };
 use alloy_eips::{eip2718::WithEncoded, Typed2718};
 use alloy_primitives::{Address, Bytes, TxKind};
-use revm::context::TxEnv;
+use revm::{context::TxEnv, context_interface::either::Either};
 
 /// Trait marking types that can be converted into a transaction environment.
 pub trait IntoTxEnv<TxEnv> {
@@ -21,7 +21,10 @@ impl IntoTxEnv<Self> for TxEnv {
 }
 
 #[cfg(feature = "op")]
-impl<T: revm::context::Transaction> IntoTxEnv<Self> for op_revm::OpTransaction<T> {
+impl<T> IntoTxEnv<Self> for op_revm::OpTransaction<T>
+where
+    T: revm::context_interface::transaction::Transaction,
+{
     fn into_tx_env(self) -> Self {
         self
     }
@@ -205,7 +208,10 @@ impl FromRecoveredTx<TxEip7702> for TxEnv {
             chain_id: Some(*chain_id),
             gas_priority_fee: Some(*max_priority_fee_per_gas),
             access_list: access_list.clone(),
-            authorization_list: authorization_list.clone(),
+            authorization_list: authorization_list
+                .iter()
+                .map(|auth| Either::Left(auth.clone()))
+                .collect(),
             ..Default::default()
         }
     }
