@@ -21,3 +21,8 @@ pub use error::*;
 pub mod tx;
 pub use tx::*;
 pub mod precompiles;
+
+// re-export revm and op-revm
+#[cfg(feature = "op")]
+pub use op_revm;
+pub use revm;
