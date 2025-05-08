@@ -5,11 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0](https://github.com/alloy-rs/evm/releases/tag/v0.7.0) - 2025-05-08
+
+### Bug Fixes
+
+- Use HashMap::with_capacity_and_hasher ([#83](https://github.com/alloy-rs/evm/issues/83))
+
+### Dependencies
+
+- Bump op-revm ([#79](https://github.com/alloy-rs/evm/issues/79))
+
+### Features
+
+- Expose Inspector on Evm ([#81](https://github.com/alloy-rs/evm/issues/81))
+- [eip7702] Delegate signer recovery to `alloy-consensus::crypto` ([#82](https://github.com/alloy-rs/evm/issues/82))
+- Bump revm ([#74](https://github.com/alloy-rs/evm/issues/74))
+- Include Precompiles associated type in Evm trait ([#73](https://github.com/alloy-rs/evm/issues/73))
+- Add SpecPrecompiles ([#71](https://github.com/alloy-rs/evm/issues/71))
+
+### Miscellaneous Tasks
+
+- Use as_ref ([#80](https://github.com/alloy-rs/evm/issues/80))
+
+### Styling
+
+- Re-export revm & op-revm ([#77](https://github.com/alloy-rs/evm/issues/77))
+
 ## [0.6.0](https://github.com/alloy-rs/evm/releases/tag/v0.6.0) - 2025-04-23
 
 ### Dependencies
 
 - Bump alloy 0.15 ([#72](https://github.com/alloy-rs/evm/issues/72))
+
+### Miscellaneous Tasks
+
+- Release 0.6.0
 
 ## [0.5.0](https://github.com/alloy-rs/evm/releases/tag/v0.5.0) - 2025-04-15
 
