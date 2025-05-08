@@ -79,11 +79,6 @@ impl<DB: Database, I, PRECOMPILE> EthEvm<DB, I, PRECOMPILE> {
     pub fn ctx_mut(&mut self) -> &mut EthEvmContext<DB> {
         &mut self.inner.ctx
     }
-
-    /// Provides a mutable reference to the EVM inspector.
-    pub fn inspector_mut(&mut self) -> &mut I {
-        &mut self.inner.inspector
-    }
 }
 
 impl<DB: Database, I, PRECOMPILE> Deref for EthEvm<DB, I, PRECOMPILE> {
@@ -114,6 +109,7 @@ where
     type HaltReason = HaltReason;
     type Spec = SpecId;
     type Precompiles = PRECOMPILE;
+    type Inspector = I;
 
     fn block(&self) -> &BlockEnv {
         &self.block
@@ -211,6 +207,10 @@ where
 
     fn precompiles_mut(&mut self) -> &mut Self::Precompiles {
         &mut self.inner.precompiles
+    }
+
+    fn inspector_mut(&mut self) -> &mut Self::Inspector {
+        &mut self.inner.inspector
     }
 }
 

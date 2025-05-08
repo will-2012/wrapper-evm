@@ -54,11 +54,6 @@ impl<DB: Database, I, P> OpEvm<DB, I, P> {
     pub fn ctx_mut(&mut self) -> &mut OpContext<DB> {
         &mut self.inner.0.ctx
     }
-
-    /// Provides a mutable reference to the EVM inspector.
-    pub fn inspector_mut(&mut self) -> &mut I {
-        &mut self.inner.0.inspector
-    }
 }
 
 impl<DB: Database, I, P> OpEvm<DB, I, P> {
@@ -102,6 +97,7 @@ where
     type HaltReason = OpHaltReason;
     type Spec = OpSpecId;
     type Precompiles = P;
+    type Inspector = I;
 
     fn block(&self) -> &BlockEnv {
         &self.block
@@ -209,6 +205,10 @@ where
 
     fn precompiles_mut(&mut self) -> &mut Self::Precompiles {
         &mut self.inner.0.precompiles
+    }
+
+    fn inspector_mut(&mut self) -> &mut Self::Inspector {
+        &mut self.inner.0.inspector
     }
 }
 
