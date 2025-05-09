@@ -225,7 +225,7 @@ impl EvmFactory for OpEvmFactory {
         EVMError<DBError, OpTransactionError>;
     type HaltReason = OpHaltReason;
     type Spec = OpSpecId;
-    type Precompiles = PrecompilesMap;
+    type Precompiles = OpPrecompiles;
 
     fn create_evm<DB: Database>(
         &self,
@@ -238,10 +238,7 @@ impl EvmFactory for OpEvmFactory {
                 .with_db(db)
                 .with_block(input.block_env)
                 .with_cfg(input.cfg_env)
-                .build_op_with_inspector(NoOpInspector {})
-                .with_precompiles(PrecompilesMap::from_static(
-                    OpPrecompiles::new_with_spec(spec_id).precompiles(),
-                )),
+                .build_op_with_inspector(NoOpInspector {}),
             inspect: false,
         }
     }
@@ -258,10 +255,7 @@ impl EvmFactory for OpEvmFactory {
                 .with_db(db)
                 .with_block(input.block_env)
                 .with_cfg(input.cfg_env)
-                .build_op_with_inspector(inspector)
-                .with_precompiles(PrecompilesMap::from_static(
-                    OpPrecompiles::new_with_spec(spec_id).precompiles(),
-                )),
+                .build_op_with_inspector(inspector),
             inspect: true,
         }
     }

@@ -226,7 +226,7 @@ impl EvmFactory for EthEvmFactory {
     type Error<DBError: core::error::Error + Send + Sync + 'static> = EVMError<DBError>;
     type HaltReason = HaltReason;
     type Spec = SpecId;
-    type Precompiles = PrecompilesMap;
+    type Precompiles = EthPrecompiles;
 
     fn create_evm<DB: Database>(&self, db: DB, input: EvmEnv) -> Self::Evm<DB, NoOpInspector> {
         let spec_id = input.cfg_env.spec;
@@ -235,10 +235,7 @@ impl EvmFactory for EthEvmFactory {
                 .with_block(input.block_env)
                 .with_cfg(input.cfg_env)
                 .with_db(db)
-                .build_mainnet_with_inspector(NoOpInspector {})
-                .with_precompiles(PrecompilesMap::from_static(Precompiles::new(
-                    PrecompileSpecId::from_spec_id(spec_id),
-                ))),
+                .build_mainnet_with_inspector(NoOpInspector {}),
             inspect: false,
         }
     }
@@ -255,10 +252,7 @@ impl EvmFactory for EthEvmFactory {
                 .with_block(input.block_env)
                 .with_cfg(input.cfg_env)
                 .with_db(db)
-                .build_mainnet_with_inspector(inspector)
-                .with_precompiles(PrecompilesMap::from_static(Precompiles::new(
-                    PrecompileSpecId::from_spec_id(spec_id),
-                ))),
+                .build_mainnet_with_inspector(inspector),
             inspect: true,
         }
     }
