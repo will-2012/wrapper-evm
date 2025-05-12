@@ -5,11 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.2](https://github.com/alloy-rs/evm/releases/tag/v0.7.2) - 2025-05-12
+
+### Bug Fixes
+
+- `r.as_ref()` the trait `AsRef<[_; 0]>` is not implemented for `[u8]` ([#86](https://github.com/alloy-rs/evm/issues/86))
+
+### Styling
+
+- Impl Evm for Either ([#84](https://github.com/alloy-rs/evm/issues/84))
+
 ## [0.7.1](https://github.com/alloy-rs/evm/releases/tag/v0.7.1) - 2025-05-09
 
 ### Dependencies
 
 - Bump op-revm ([#85](https://github.com/alloy-rs/evm/issues/85))
+
+### Miscellaneous Tasks
+
+- Release 0.7.1
 
 ## [0.7.0](https://github.com/alloy-rs/evm/releases/tag/v0.7.0) - 2025-05-08
 
