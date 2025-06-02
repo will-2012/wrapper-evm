@@ -22,7 +22,7 @@ use alloy_hardforks::EthereumHardfork;
 use alloy_primitives::{Log, B256};
 use revm::{
     context::result::ExecutionResult, context_interface::result::ResultAndState, database::State,
-    DatabaseCommit, Inspector,
+    DatabaseCommit,
 };
 
 /// Context for Ethereum block execution.
@@ -289,14 +289,13 @@ where
         &self.evm_factory
     }
 
-    fn create_executor<'a, DB, I>(
+    fn create_executor<'a, DB>(
         &'a self,
-        evm: EvmF::Evm<&'a mut State<DB>, I>,
+        evm: EvmF::Evm<&'a mut State<DB>>,
         ctx: Self::ExecutionCtx<'a>,
-    ) -> impl BlockExecutorFor<'a, Self, DB, I>
+    ) -> impl BlockExecutorFor<'a, Self, DB>
     where
         DB: Database + 'a,
-        I: Inspector<EvmF::Context<&'a mut State<DB>>> + 'a,
     {
         EthBlockExecutor::new(evm, ctx, &self.spec, &self.receipt_builder)
     }

@@ -5,9 +5,7 @@ use crate::{
 };
 use alloc::{boxed::Box, vec::Vec};
 use alloy_eips::eip7685::Requests;
-use revm::{
-    context::result::ExecutionResult, database::State, inspector::NoOpInspector, Inspector,
-};
+use revm::{context::result::ExecutionResult, database::State};
 
 mod error;
 pub use error::*;
@@ -172,25 +170,23 @@ pub trait BlockExecutor {
 
 /// A helper trait encapsulating the constraints on [`BlockExecutor`] produced by the
 /// [`BlockExecutorFactory`] to avoid duplicating them in every implementation.
-pub trait BlockExecutorFor<'a, F: BlockExecutorFactory + ?Sized, DB, I = NoOpInspector>
+pub trait BlockExecutorFor<'a, F: BlockExecutorFactory + ?Sized, DB>
 where
     Self: BlockExecutor<
-        Evm = <F::EvmFactory as EvmFactory>::Evm<&'a mut State<DB>, I>,
+        Evm = <F::EvmFactory as EvmFactory>::Evm<&'a mut State<DB>>,
         Transaction = F::Transaction,
         Receipt = F::Receipt,
     >,
     DB: Database + 'a,
-    I: Inspector<<F::EvmFactory as EvmFactory>::Context<&'a mut State<DB>>> + 'a,
 {
 }
 
-impl<'a, F, DB, I, T> BlockExecutorFor<'a, F, DB, I> for T
+impl<'a, F, DB, T> BlockExecutorFor<'a, F, DB> for T
 where
     F: BlockExecutorFactory,
     DB: Database + 'a,
-    I: Inspector<<F::EvmFactory as EvmFactory>::Context<&'a mut State<DB>>> + 'a,
     T: BlockExecutor<
-        Evm = <F::EvmFactory as EvmFactory>::Evm<&'a mut State<DB>, I>,
+        Evm = <F::EvmFactory as EvmFactory>::Evm<&'a mut State<DB>>,
         Transaction = F::Transaction,
         Receipt = F::Receipt,
     >,
@@ -230,12 +226,11 @@ pub trait BlockExecutorFactory: 'static {
     fn evm_factory(&self) -> &Self::EvmFactory;
 
     /// Creates an executor with given EVM and execution context.
-    fn create_executor<'a, DB, I>(
+    fn create_executor<'a, DB>(
         &'a self,
-        evm: <Self::EvmFactory as EvmFactory>::Evm<&'a mut State<DB>, I>,
+        evm: <Self::EvmFactory as EvmFactory>::Evm<&'a mut State<DB>>,
         ctx: Self::ExecutionCtx<'a>,
-    ) -> impl BlockExecutorFor<'a, Self, DB, I>
+    ) -> impl BlockExecutorFor<'a, Self, DB>
     where
-        DB: Database + 'a,
-        I: Inspector<<Self::EvmFactory as EvmFactory>::Context<&'a mut State<DB>>> + 'a;
+        DB: Database + 'a;
 }

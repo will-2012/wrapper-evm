@@ -5,11 +5,7 @@ use alloy_primitives::{Address, Bytes};
 use core::{error::Error, fmt::Debug, hash::Hash};
 use revm::{
     context::{result::ExecutionResult, BlockEnv},
-    context_interface::{
-        result::{HaltReasonTr, ResultAndState},
-        ContextTr,
-    },
-    inspector::{JournalExt, NoOpInspector},
+    context_interface::result::{HaltReasonTr, ResultAndState},
     DatabaseCommit, Inspector,
 };
 
@@ -44,8 +40,8 @@ pub trait Evm {
     type Spec: Debug + Copy + Hash + Eq + Send + Sync + Default + 'static;
     /// Precompiles used by the EVM.
     type Precompiles;
-    /// Evm inspector.
-    type Inspector;
+    /// The context for inspectors.
+    type Context;
 
     /// Reference to [`BlockEnv`].
     fn block(&self) -> &BlockEnv;
@@ -59,6 +55,13 @@ pub trait Evm {
         tx: Self::Tx,
     ) -> Result<ResultAndState<Self::HaltReason>, Self::Error>;
 
+    /// Executes a transaction with inspector.
+    fn inspect_raw(
+        &mut self,
+        tx: Self::Tx,
+        inspector: impl Inspector<Self::Context>,
+    ) -> Result<ResultAndState<Self::HaltReason>, Self::Error>;
+
     /// Same as [`Evm::transact_raw`], but takes a [`IntoTxEnv`] implementation, thus allowing to
     /// support transacting with an external type.
     fn transact(
@@ -66,6 +69,16 @@ pub trait Evm {
         tx: impl IntoTxEnv<Self::Tx>,
     ) -> Result<ResultAndState<Self::HaltReason>, Self::Error> {
         self.transact_raw(tx.into_tx_env())
+    }
+
+    /// Same as [`Evm::inspect_raw`], but takes a [`IntoTxEnv`] implementation, thus allowing to
+    /// support transacting with an external type.
+    fn inspect(
+        &mut self,
+        tx: impl IntoTxEnv<Self::Tx>,
+        inspector: impl Inspector<Self::Context>,
+    ) -> Result<ResultAndState<Self::HaltReason>, Self::Error> {
+        self.inspect_raw(tx.into_tx_env(), inspector)
     }
 
     /// Executes a system call.
@@ -118,53 +131,25 @@ pub trait Evm {
         self.finish().1
     }
 
-    /// Determines whether additional transactions should be inspected or not.
-    ///
-    /// See also [`EvmFactory::create_evm_with_inspector`].
-    fn set_inspector_enabled(&mut self, enabled: bool);
-
-    /// Enables the configured inspector.
-    ///
-    /// All additional transactions will be inspected if enabled.
-    fn enable_inspector(&mut self) {
-        self.set_inspector_enabled(true)
-    }
-
-    /// Disables the configured inspector.
-    ///
-    /// Transactions will no longer be inspected.
-    fn disable_inspector(&mut self) {
-        self.set_inspector_enabled(false)
-    }
-
     /// Getter of precompiles.
     fn precompiles(&self) -> &Self::Precompiles;
 
     /// Mutable getter of precompiles.
     fn precompiles_mut(&mut self) -> &mut Self::Precompiles;
-
-    /// Getter of inspector.
-    fn inspector(&self) -> &Self::Inspector;
-
-    /// Mutable getter of inspector.
-    fn inspector_mut(&mut self) -> &mut Self::Inspector;
 }
 
 /// A type responsible for creating instances of an ethereum virtual machine given a certain input.
 pub trait EvmFactory {
     /// The EVM type that this factory creates.
-    type Evm<DB: Database, I: Inspector<Self::Context<DB>>>: Evm<
+    type Evm<DB: Database>: Evm<
         DB = DB,
         Tx = Self::Tx,
         HaltReason = Self::HaltReason,
         Error = Self::Error<DB::Error>,
         Spec = Self::Spec,
         Precompiles = Self::Precompiles,
-        Inspector = I,
     >;
 
-    /// The EVM context for inspectors
-    type Context<DB: Database>: ContextTr<Db = DB, Journal: JournalExt>;
     /// Transaction environment.
     type Tx: IntoTxEnv<Self::Tx>;
     /// EVM error. See [`Evm::Error`].
@@ -177,20 +162,5 @@ pub trait EvmFactory {
     type Precompiles;
 
     /// Creates a new instance of an EVM.
-    fn create_evm<DB: Database>(
-        &self,
-        db: DB,
-        evm_env: EvmEnv<Self::Spec>,
-    ) -> Self::Evm<DB, NoOpInspector>;
-
-    /// Creates a new instance of an EVM with an inspector.
-    ///
-    /// Note: It is expected that the [`Inspector`] is usually provided as `&mut Inspector` so that
-    /// it remains owned by the call site when [`Evm::transact`] is invoked.
-    fn create_evm_with_inspector<DB: Database, I: Inspector<Self::Context<DB>>>(
-        &self,
-        db: DB,
-        input: EvmEnv<Self::Spec>,
-        inspector: I,
-    ) -> Self::Evm<DB, I>;
+    fn create_evm<DB: Database>(&self, db: DB, evm_env: EvmEnv<Self::Spec>) -> Self::Evm<DB>;
 }

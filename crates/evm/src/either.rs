@@ -12,7 +12,7 @@ where
         HaltReason = L::HaltReason,
         Spec = L::Spec,
         Precompiles = L::Precompiles,
-        Inspector = L::Inspector,
+        Context = L::Context,
     >,
 {
     type DB = L::DB;
@@ -21,7 +21,7 @@ where
     type HaltReason = L::HaltReason;
     type Spec = L::Spec;
     type Precompiles = L::Precompiles;
-    type Inspector = L::Inspector;
+    type Context = L::Context;
 
     fn block(&self) -> &BlockEnv {
         either::for_both!(self, evm => evm.block())
@@ -36,6 +36,14 @@ where
         tx: Self::Tx,
     ) -> Result<revm::context::result::ResultAndState<Self::HaltReason>, Self::Error> {
         either::for_both!(self, evm => evm.transact_raw(tx))
+    }
+
+    fn inspect_raw(
+        &mut self,
+        tx: Self::Tx,
+        inspector: impl revm::Inspector<Self::Context>,
+    ) -> Result<revm::context::result::ResultAndState<Self::HaltReason>, Self::Error> {
+        either::for_both!(self, evm => evm.inspect_raw(tx, inspector))
     }
 
     fn transact(
@@ -89,31 +97,11 @@ where
         either::for_both!(self, evm => evm.into_env())
     }
 
-    fn set_inspector_enabled(&mut self, enabled: bool) {
-        either::for_both!(self, evm => evm.set_inspector_enabled(enabled))
-    }
-
-    fn enable_inspector(&mut self) {
-        either::for_both!(self, evm => evm.enable_inspector())
-    }
-
-    fn disable_inspector(&mut self) {
-        either::for_both!(self, evm => evm.disable_inspector())
-    }
-
     fn precompiles(&self) -> &Self::Precompiles {
         either::for_both!(self, evm => evm.precompiles())
     }
 
     fn precompiles_mut(&mut self) -> &mut Self::Precompiles {
         either::for_both!(self, evm => evm.precompiles_mut())
-    }
-
-    fn inspector(&self) -> &Self::Inspector {
-        either::for_both!(self, evm => evm.inspector())
-    }
-
-    fn inspector_mut(&mut self) -> &mut Self::Inspector {
-        either::for_both!(self, evm => evm.inspector_mut())
     }
 }
