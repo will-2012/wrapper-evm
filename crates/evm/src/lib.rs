@@ -20,9 +20,9 @@ pub mod error;
 pub use error::*;
 pub mod tx;
 pub use tx::*;
-pub mod precompiles;
 #[cfg(feature = "overrides")]
 pub mod overrides;
+pub mod precompiles;
 pub mod tracing;
 
 mod either;
