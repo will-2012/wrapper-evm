@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.0](https://github.com/alloy-rs/evm/releases/tag/v0.12.0) - 2025-06-20
+
+### Dependencies
+
+- Bump revm 25 ([#100](https://github.com/alloy-rs/evm/issues/100))
+
+### Documentation
+
+- Improve apply_precompile documentation ([#106](https://github.com/alloy-rs/evm/issues/106))
+- Improve BlockExecutorFactory and ExecutionCtx documentation ([#104](https://github.com/alloy-rs/evm/issues/104))
+- Improve transaction trait documentation ([#103](https://github.com/alloy-rs/evm/issues/103))
+
+### Features
+
+- Add RPC utilities for block and state overrides ([#108](https://github.com/alloy-rs/evm/issues/108))
+- Provide more context to `Precompile::call` ([#109](https://github.com/alloy-rs/evm/issues/109))
+
 ## [0.11.0](https://github.com/alloy-rs/evm/releases/tag/v0.11.0) - 2025-06-11
 
 ### Features
@@ -13,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Miscellaneous Tasks
 
+- Release 0.11.0
 - Update `op-alloy-consensus` ([#101](https://github.com/alloy-rs/evm/issues/101))
 
 ## [0.10.0](https://github.com/alloy-rs/evm/releases/tag/v0.10.0) - 2025-05-23
