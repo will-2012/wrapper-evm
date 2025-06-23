@@ -5,11 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.12.1](https://github.com/alloy-rs/evm/releases/tag/v0.12.1) - 2025-06-20
+## [0.12.2](https://github.com/alloy-rs/evm/releases/tag/v0.12.2) - 2025-06-23
 
 ### Bug Fixes
 
 - Fix compilation
+
+### Documentation
+
+- Fix typo in tracing.rs comment ([#113](https://github.com/alloy-rs/evm/issues/113))
+- Correct spelling of "commit" in comments ([#112](https://github.com/alloy-rs/evm/issues/112))
+
+### Features
+
+- Add call-util feature with caller_gas_allowance ([#111](https://github.com/alloy-rs/evm/issues/111))
+
+### Miscellaneous Tasks
+
+- Derive Copy for `PrecompileInput` ([#110](https://github.com/alloy-rs/evm/issues/110))
+- Release 0.12.1
 
 ## [0.12.0](https://github.com/alloy-rs/evm/releases/tag/v0.12.0) - 2025-06-20
 
