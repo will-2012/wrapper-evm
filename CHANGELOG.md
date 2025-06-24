@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.3](https://github.com/alloy-rs/evm/releases/tag/v0.12.3) - 2025-06-24
+
+### Bug Fixes
+
+- `the trait bound `[u8]: AsRef<[_; 0]>` is not satisfied` in `precompiles` ([#114](https://github.com/alloy-rs/evm/issues/114))
+
 ## [0.12.2](https://github.com/alloy-rs/evm/releases/tag/v0.12.2) - 2025-06-23
 
 ### Bug Fixes
@@ -22,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Miscellaneous Tasks
 
+- Release 0.12.2
 - Derive Copy for `PrecompileInput` ([#110](https://github.com/alloy-rs/evm/issues/110))
 - Release 0.12.1
 
