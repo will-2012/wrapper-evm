@@ -6,7 +6,7 @@ use alloy_primitives::{Address, B256};
 use core::{error::Error, fmt::Debug};
 use revm::{
     context::{DBErrorMarker, JournalTr},
-    interpreter::{SStoreResult, StateLoad},
+    interpreter::{SStoreResult, StateCodeLoad, StateLoad},
     primitives::{StorageKey, StorageValue},
     state::{Account, AccountInfo, Bytecode},
 };
@@ -53,7 +53,7 @@ trait EvmInternalsTr: Database<Error = ErasedError> + Debug {
     fn load_account_code(
         &mut self,
         address: Address,
-    ) -> Result<StateLoad<&mut Account>, EvmInternalsError>;
+    ) -> Result<StateCodeLoad<&mut Account>, EvmInternalsError>;
 
     fn sload(
         &mut self,
@@ -118,7 +118,7 @@ where
     fn load_account_code(
         &mut self,
         address: Address,
-    ) -> Result<StateLoad<&mut Account>, EvmInternalsError> {
+    ) -> Result<StateCodeLoad<&mut Account>, EvmInternalsError> {
         self.0.load_account_code(address).map_err(EvmInternalsError::database)
     }
 
@@ -183,7 +183,7 @@ impl<'a> EvmInternals<'a> {
     pub fn load_account_code(
         &mut self,
         address: Address,
-    ) -> Result<StateLoad<&mut Account>, EvmInternalsError> {
+    ) -> Result<StateCodeLoad<&mut Account>, EvmInternalsError> {
         self.internals.load_account_code(address)
     }
 
