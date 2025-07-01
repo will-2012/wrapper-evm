@@ -5,11 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.0](https://github.com/alloy-rs/evm/releases/tag/v0.13.0) - 2025-07-01
+
+### Dependencies
+
+- Bump revm ([#122](https://github.com/alloy-rs/evm/issues/122))
+
+### Features
+
+- Add object-safe EvmInternals trait for journal operations ([#118](https://github.com/alloy-rs/evm/issues/118))
+- Add builder-style methods for precompile manipulation ([#120](https://github.com/alloy-rs/evm/issues/120))
+- Add setter utils to blockenv ([#116](https://github.com/alloy-rs/evm/issues/116))
+
+### Miscellaneous Tasks
+
+- Add some DynPrompile impls ([#117](https://github.com/alloy-rs/evm/issues/117))
+
 ## [0.12.3](https://github.com/alloy-rs/evm/releases/tag/v0.12.3) - 2025-06-24
 
 ### Bug Fixes
 
 - `the trait bound `[u8]: AsRef<[_; 0]>` is not satisfied` in `precompiles` ([#114](https://github.com/alloy-rs/evm/issues/114))
+
+### Miscellaneous Tasks
+
+- Release 0.12.3
 
 ## [0.12.2](https://github.com/alloy-rs/evm/releases/tag/v0.12.2) - 2025-06-23
 
