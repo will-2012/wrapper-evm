@@ -44,7 +44,7 @@ impl EvmInternalsError {
 ///
 /// This trait provides an abstraction over journal operations without exposing
 /// associated types, making it object-safe and suitable for dynamic dispatch.
-trait EvmInternalsTr: Database<Error = ErasedError> + Debug {
+trait EvmInternalsTr: Database<Error = ErasedError> {
     fn load_account(
         &mut self,
         address: Address,
@@ -74,7 +74,6 @@ trait EvmInternalsTr: Database<Error = ErasedError> + Debug {
 }
 
 /// Helper internal struct for implementing [`EvmInternals`].
-#[derive(Debug)]
 struct EvmInternalsImpl<'a, T>(&'a mut T);
 
 impl<T> revm::Database for EvmInternalsImpl<'_, T>
@@ -106,7 +105,7 @@ where
 
 impl<T> EvmInternalsTr for EvmInternalsImpl<'_, T>
 where
-    T: JournalTr<Database: Database> + Debug,
+    T: JournalTr<Database: Database>,
 {
     fn load_account(
         &mut self,
@@ -149,7 +148,6 @@ where
 }
 
 /// Helper type exposing hooks into EVM.
-#[derive(Debug)]
 pub struct EvmInternals<'a> {
     internals: Box<dyn EvmInternalsTr + 'a>,
 }
@@ -158,7 +156,7 @@ impl<'a> EvmInternals<'a> {
     /// Creates a new [`EvmInternals`] instance.
     pub fn new<T>(journal: &'a mut T) -> Self
     where
-        T: JournalTr<Database: Database> + Debug,
+        T: JournalTr<Database: Database>,
     {
         Self { internals: Box::new(EvmInternalsImpl(journal)) }
     }

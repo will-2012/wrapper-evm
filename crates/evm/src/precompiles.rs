@@ -7,7 +7,6 @@ use alloy_primitives::{
     map::{HashMap, HashSet},
     Address, Bytes, U256,
 };
-use core::fmt::Debug;
 use revm::{
     context::LocalContextTr,
     handler::{EthPrecompiles, PrecompileProvider},
@@ -369,7 +368,6 @@ impl core::fmt::Debug for DynPrecompiles {
 }
 
 /// Input for a precompile call.
-#[derive(Debug)]
 pub struct PrecompileInput<'a> {
     /// Input data bytes.
     pub data: &'a [u8],
