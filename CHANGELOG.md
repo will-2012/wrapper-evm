@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.0](https://github.com/alloy-rs/evm/releases/tag/v0.14.0) - 2025-07-03
+
+### Dependencies
+
+- Bump revm 27.0.2 ([#124](https://github.com/alloy-rs/evm/issues/124))
+
+### Features
+
+- Add BlockEnv to EvmInternals ([#123](https://github.com/alloy-rs/evm/issues/123))
+
 ## [0.13.0](https://github.com/alloy-rs/evm/releases/tag/v0.13.0) - 2025-07-01
 
 ### Dependencies
@@ -19,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Miscellaneous Tasks
 
+- Release 0.13.0
 - Add some DynPrompile impls ([#117](https://github.com/alloy-rs/evm/issues/117))
 
 ## [0.12.3](https://github.com/alloy-rs/evm/releases/tag/v0.12.3) - 2025-06-24
