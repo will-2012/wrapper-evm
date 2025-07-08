@@ -342,6 +342,20 @@ impl DynPrecompile {
     {
         Self(Arc::new(f))
     }
+
+    /// Creates a new [`DynPrecompiles`] with the given closure and [`Precompile::is_pure`]
+    /// returning `false`.
+    pub fn new_stateful<F>(f: F) -> Self
+    where
+        F: Fn(PrecompileInput<'_>) -> PrecompileResult + Send + Sync + 'static,
+    {
+        Self(Arc::new(StatefulPrecompile(f)))
+    }
+
+    /// Flips [`Precompile::is_pure`] to `false`.
+    pub fn stateful(self) -> Self {
+        Self(Arc::new(StatefulPrecompile(self.0)))
+    }
 }
 
 impl core::fmt::Debug for DynPrecompile {
@@ -384,9 +398,40 @@ pub struct PrecompileInput<'a> {
 }
 
 /// Trait for implementing precompiled contracts.
+#[auto_impl::auto_impl(Arc)]
 pub trait Precompile {
     /// Execute the precompile with the given input data, gas limit, and caller address.
     fn call(&self, input: PrecompileInput<'_>) -> PrecompileResult;
+
+    /// Returns whether the precompile is pure.
+    ///
+    /// A pure precompile has deterministic output based solely on its input.
+    /// Non-pure precompiles may produce different outputs for the same input
+    /// based on the current state or other external factors.
+    ///
+    /// # Default
+    ///
+    /// Returns `true` by default, indicating the precompile is pure
+    /// and its results should be cached as this is what most of the precompiles are.
+    ///
+    /// # Examples
+    ///
+    /// Override this method to return `false` for non-deterministic precompiles:
+    ///
+    /// ```ignore
+    /// impl Precompile for MyDeterministicPrecompile {
+    ///     fn call(&self, input: PrecompileInput<'_>) -> PrecompileResult {
+    ///         // non-deterministic computation dependent on state
+    ///     }
+    ///
+    ///     fn is_pure(&self) -> bool {
+    ///         false // This precompile might produce different output for the same input
+    ///     }
+    /// }
+    /// ```
+    fn is_pure(&self) -> bool {
+        true
+    }
 }
 
 impl<F> Precompile for F
@@ -418,11 +463,19 @@ impl Precompile for DynPrecompile {
     fn call(&self, input: PrecompileInput<'_>) -> PrecompileResult {
         self.0.call(input)
     }
+
+    fn is_pure(&self) -> bool {
+        self.0.is_pure()
+    }
 }
 
 impl Precompile for &DynPrecompile {
     fn call(&self, input: PrecompileInput<'_>) -> PrecompileResult {
         self.0.call(input)
+    }
+
+    fn is_pure(&self) -> bool {
+        self.0.is_pure()
     }
 }
 
@@ -432,6 +485,25 @@ impl<A: Precompile, B: Precompile> Precompile for Either<A, B> {
             Self::Left(p) => p.call(input),
             Self::Right(p) => p.call(input),
         }
+    }
+
+    fn is_pure(&self) -> bool {
+        match self {
+            Self::Left(p) => p.is_pure(),
+            Self::Right(p) => p.is_pure(),
+        }
+    }
+}
+
+struct StatefulPrecompile<P>(P);
+
+impl<P: Precompile> Precompile for StatefulPrecompile<P> {
+    fn call(&self, input: PrecompileInput<'_>) -> PrecompileResult {
+        self.0.call(input)
+    }
+
+    fn is_pure(&self) -> bool {
+        false
     }
 }
 
@@ -541,6 +613,27 @@ mod tests {
             .unwrap();
         assert_eq!(result.gas_used, 15);
         assert_eq!(result.bytes, expected_output);
+    }
+
+    #[test]
+    fn test_is_pure() {
+        // Test default behavior (should be false)
+        let closure_precompile = |_input: PrecompileInput<'_>| -> PrecompileResult {
+            Ok(PrecompileOutput { gas_used: 10, bytes: Bytes::from_static(b"output") })
+        };
+
+        let dyn_precompile: DynPrecompile = closure_precompile.into();
+        assert!(dyn_precompile.is_pure(), "should be pure by default");
+
+        // Test custom precompile with overridden is_pure
+        let stateful_precompile = DynPrecompile::new_stateful(closure_precompile);
+        assert!(!stateful_precompile.is_pure(), "PurePrecompile should return true for is_pure");
+
+        let either_left = Either::<DynPrecompile, DynPrecompile>::Left(stateful_precompile);
+        assert!(!either_left.is_pure(), "Either::Left with non-pure should return false");
+
+        let either_right = Either::<DynPrecompile, DynPrecompile>::Right(dyn_precompile);
+        assert!(either_right.is_pure(), "Either::Right with pure should return true");
     }
 
     #[test]
