@@ -305,7 +305,11 @@ where
             Ok(output) => {
                 let underflow = result.gas.record_cost(output.gas_used);
                 assert!(underflow, "Gas underflow is not possible");
-                result.result = InstructionResult::Return;
+                result.result = if output.reverted {
+                    InstructionResult::Revert
+                } else {
+                    InstructionResult::Return
+                };
                 result.output = output.bytes;
             }
             Err(PrecompileError::Fatal(e)) => return Err(e),
@@ -556,7 +560,7 @@ mod tests {
         spec_precompiles.map_precompile(&identity_address, move |_original_dyn| {
             // create a new DynPrecompile that always returns our constant
             |_input: PrecompileInput<'_>| -> PrecompileResult {
-                Ok(PrecompileOutput { gas_used: 10, bytes: Bytes::from_static(b"constant value") })
+                Ok(PrecompileOutput::new(10, Bytes::from_static(b"constant value")))
             }
             .into()
         });
@@ -597,7 +601,7 @@ mod tests {
             let _timestamp = input.internals.block_env().timestamp();
             let mut output = b"processed: ".to_vec();
             output.extend_from_slice(input.data.as_ref());
-            Ok(PrecompileOutput { gas_used: 15, bytes: Bytes::from(output) })
+            Ok(PrecompileOutput::new(15, Bytes::from(output)))
         };
 
         let dyn_precompile: DynPrecompile = closure_precompile.into();
@@ -619,7 +623,7 @@ mod tests {
     fn test_is_pure() {
         // Test default behavior (should be false)
         let closure_precompile = |_input: PrecompileInput<'_>| -> PrecompileResult {
-            Ok(PrecompileOutput { gas_used: 10, bytes: Bytes::from_static(b"output") })
+            Ok(PrecompileOutput::new(10, Bytes::from_static(b"output")))
         };
 
         let dyn_precompile: DynPrecompile = closure_precompile.into();
