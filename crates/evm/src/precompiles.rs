@@ -16,6 +16,8 @@ use revm::{
     Context, Journal,
 };
 
+type PrecompileLookup = Arc<dyn Fn(&Address) -> Option<DynPrecompile> + Send + Sync>;
+
 /// A mapping of precompile contracts that can be either static (builtin) or dynamic.
 ///
 /// This is an optimization that allows us to keep using the static precompiles
@@ -24,6 +26,8 @@ use revm::{
 pub struct PrecompilesMap {
     /// The wrapped precompiles in their current representation.
     precompiles: PrecompilesKind,
+    /// An optional dynamic precompile loader that can lookup precompiles dynamically.
+    lookup: Option<PrecompileLookup>,
 }
 
 impl PrecompilesMap {
@@ -34,7 +38,7 @@ impl PrecompilesMap {
 
     /// Creates a new set of precompiles for a spec.
     pub fn new(precompiles: Cow<'static, Precompiles>) -> Self {
-        Self { precompiles: PrecompilesKind::Builtin(precompiles) }
+        Self { precompiles: PrecompilesKind::Builtin(precompiles), lookup: None }
     }
 
     /// Maps a precompile at the given address using the provided function.
@@ -172,6 +176,63 @@ impl PrecompilesMap {
         self
     }
 
+    /// Sets a dynamic precompile lookup function that is called for addresses not found
+    /// in the static precompile map.
+    ///
+    /// This method allows you to provide runtime-resolved precompiles that aren't known
+    /// at initialization time. The lookup function is called whenever a precompile check
+    /// is performed for an address that doesn't exist in the main precompile map.
+    ///
+    /// # Important Notes
+    ///
+    /// - **Priority**: Static precompiles take precedence. The lookup function is only called if
+    ///   the address is not found in the main precompile map.
+    /// - **Gas accounting**: Addresses resolved through this lookup are always treated as cold,
+    ///   meaning they incur cold access costs even on repeated calls within the same transaction.
+    ///   See also [`PrecompileProvider::warm_addresses`].
+    /// - **Performance**: The lookup function is called on every precompile check for
+    ///   non-registered addresses, so it should be efficient.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// precompiles.set_precompile_lookup(|address| {
+    ///     // Dynamically resolve precompiles based on address pattern
+    ///     if address.as_slice().starts_with(&[0xDE, 0xAD]) {
+    ///         Some(DynPrecompile::new(|input| {
+    ///             // Custom precompile logic
+    ///             Ok(PrecompileOutput {
+    ///                 gas_used: 100,
+    ///                 bytes: Bytes::from("dynamic precompile"),
+    ///             })
+    ///         }))
+    ///     } else {
+    ///         None
+    ///     }
+    /// });
+    /// ```
+    pub fn set_precompile_lookup<F>(&mut self, f: F)
+    where
+        F: Fn(&Address) -> Option<DynPrecompile> + Send + Sync + 'static,
+    {
+        self.lookup = Some(Arc::new(f));
+    }
+
+    /// Builder-style method to set a dynamic precompile lookup function.
+    ///
+    /// This is a consuming version of [`set_precompile_lookup`](Self::set_precompile_lookup)
+    /// that returns `Self` for method chaining.
+    ///
+    /// See [`set_precompile_lookup`](Self::set_precompile_lookup) for detailed behavior,
+    /// important notes, and examples.
+    pub fn with_precompile_lookup<F>(mut self, f: F) -> Self
+    where
+        F: Fn(&Address) -> Option<DynPrecompile> + Send + Sync + 'static,
+    {
+        self.set_precompile_lookup(f);
+        self
+    }
+
     /// Ensures that precompiles are in their dynamic representation.
     /// If they are already dynamic, this is a no-op.
     /// Returns a mutable reference to the dynamic precompiles.
@@ -213,15 +274,28 @@ impl PrecompilesMap {
     }
 
     /// Gets a reference to the precompile at the given address.
+    ///
+    /// This method first checks the static precompile map, and if not found,
+    /// falls back to the dynamic lookup function (if set).
     pub fn get(&self, address: &Address) -> Option<impl Precompile + '_> {
-        match &self.precompiles {
+        // First check static precompiles
+        let static_result = match &self.precompiles {
             PrecompilesKind::Builtin(precompiles) => precompiles
                 .get(address)
                 .map(|f| Either::Left(|input: PrecompileInput<'_>| f(input.data, input.gas))),
             PrecompilesKind::Dynamic(dyn_precompiles) => {
                 dyn_precompiles.inner.get(address).map(Either::Right)
             }
+        };
+
+        // If found in static precompiles, wrap in Left and return
+        if let Some(precompile) = static_result {
+            return Some(Either::Left(precompile));
         }
+
+        // Otherwise, try the lookup function if available
+        let lookup = self.lookup.as_ref()?;
+        lookup(address).map(Either::Right)
     }
 }
 
@@ -648,6 +722,58 @@ mod tests {
 
         let either_right = Either::<DynPrecompile, DynPrecompile>::Right(dyn_precompile);
         assert!(either_right.is_pure(), "Either::Right with pure should return true");
+    }
+
+    #[test]
+    fn test_precompile_lookup() {
+        let eth_precompiles = EthPrecompiles::default();
+        let mut spec_precompiles = PrecompilesMap::from(eth_precompiles);
+
+        let mut ctx = EthEvmContext::new(EmptyDB::default(), Default::default());
+
+        // Define a custom address pattern for dynamic precompiles
+        let dynamic_prefix = [0xDE, 0xAD];
+
+        // Set up the lookup function
+        spec_precompiles.set_precompile_lookup(move |address| {
+            if address.as_slice().starts_with(&dynamic_prefix) {
+                Some(DynPrecompile::new(|_input| {
+                    Ok(PrecompileOutput {
+                        gas_used: 100,
+                        bytes: Bytes::from("dynamic precompile response"),
+                    })
+                }))
+            } else {
+                None
+            }
+        });
+
+        // Test that static precompiles still work
+        let identity_address = address!("0x0000000000000000000000000000000000000004");
+        assert!(spec_precompiles.get(&identity_address).is_some());
+
+        // Test dynamic lookup for matching address
+        let dynamic_address = address!("0xDEAD000000000000000000000000000000000001");
+        let dynamic_precompile = spec_precompiles.get(&dynamic_address);
+        assert!(dynamic_precompile.is_some(), "Dynamic precompile should be found");
+
+        // Execute the dynamic precompile
+        let result = dynamic_precompile
+            .unwrap()
+            .call(PrecompileInput {
+                data: &[],
+                gas: 1000,
+                caller: Address::ZERO,
+                value: U256::ZERO,
+                internals: EvmInternals::new(&mut ctx.journaled_state, &ctx.block),
+            })
+            .unwrap();
+        assert_eq!(result.gas_used, 100);
+        assert_eq!(result.bytes, Bytes::from("dynamic precompile response"));
+
+        // Test non-matching address returns None
+        let non_matching_address = address!("0x1234000000000000000000000000000000000001");
+        assert!(spec_precompiles.get(&non_matching_address).is_none());
     }
 
     #[test]
