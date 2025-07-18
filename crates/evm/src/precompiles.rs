@@ -16,7 +16,6 @@ use revm::{
     Context, Journal,
 };
 
-
 /// A mapping of precompile contracts that can be either static (builtin) or dynamic.
 ///
 /// This is an optimization that allows us to keep using the static precompiles
