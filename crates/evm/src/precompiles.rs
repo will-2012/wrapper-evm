@@ -16,7 +16,6 @@ use revm::{
     Context, Journal,
 };
 
-type PrecompileLookup = Arc<dyn Fn(&Address) -> Option<DynPrecompile> + Send + Sync>;
 
 /// A mapping of precompile contracts that can be either static (builtin) or dynamic.
 ///
@@ -27,7 +26,7 @@ pub struct PrecompilesMap {
     /// The wrapped precompiles in their current representation.
     precompiles: PrecompilesKind,
     /// An optional dynamic precompile loader that can lookup precompiles dynamically.
-    lookup: Option<PrecompileLookup>,
+    lookup: Option<Arc<dyn PrecompileLookup>>,
 }
 
 impl PrecompilesMap {
@@ -211,11 +210,11 @@ impl PrecompilesMap {
     ///     }
     /// });
     /// ```
-    pub fn set_precompile_lookup<F>(&mut self, f: F)
+    pub fn set_precompile_lookup<L>(&mut self, lookup: L)
     where
-        F: Fn(&Address) -> Option<DynPrecompile> + Send + Sync + 'static,
+        L: PrecompileLookup + 'static,
     {
-        self.lookup = Some(Arc::new(f));
+        self.lookup = Some(Arc::new(lookup));
     }
 
     /// Builder-style method to set a dynamic precompile lookup function.
@@ -225,11 +224,11 @@ impl PrecompilesMap {
     ///
     /// See [`set_precompile_lookup`](Self::set_precompile_lookup) for detailed behavior,
     /// important notes, and examples.
-    pub fn with_precompile_lookup<F>(mut self, f: F) -> Self
+    pub fn with_precompile_lookup<L>(mut self, lookup: L) -> Self
     where
-        F: Fn(&Address) -> Option<DynPrecompile> + Send + Sync + 'static,
+        L: PrecompileLookup + 'static,
     {
-        self.set_precompile_lookup(f);
+        self.set_precompile_lookup(lookup);
         self
     }
 
@@ -295,7 +294,7 @@ impl PrecompilesMap {
 
         // Otherwise, try the lookup function if available
         let lookup = self.lookup.as_ref()?;
-        lookup(address).map(Either::Right)
+        lookup.lookup(address).map(Either::Right)
     }
 }
 
@@ -595,6 +594,28 @@ impl<P: Precompile> Precompile for StatefulPrecompile<P> {
     }
 }
 
+/// Trait for dynamically resolving precompile contracts.
+///
+/// This trait allows for runtime resolution of precompiles that aren't known
+/// at initialization time.
+pub trait PrecompileLookup: Send + Sync {
+    /// Looks up a precompile at the given address.
+    ///
+    /// Returns `Some(precompile)` if a precompile exists at the address,
+    /// or `None` if no precompile is found.
+    fn lookup(&self, address: &Address) -> Option<DynPrecompile>;
+}
+
+/// Implement PrecompileLookup for closure types
+impl<F> PrecompileLookup for F
+where
+    F: Fn(&Address) -> Option<DynPrecompile> + Send + Sync,
+{
+    fn lookup(&self, address: &Address) -> Option<DynPrecompile> {
+        self(address)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -735,7 +756,7 @@ mod tests {
         let dynamic_prefix = [0xDE, 0xAD];
 
         // Set up the lookup function
-        spec_precompiles.set_precompile_lookup(move |address| {
+        spec_precompiles.set_precompile_lookup(move |address: &Address| {
             if address.as_slice().starts_with(&dynamic_prefix) {
                 Some(DynPrecompile::new(|_input| {
                     Ok(PrecompileOutput {
