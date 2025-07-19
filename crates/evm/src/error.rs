@@ -1,10 +1,10 @@
 //! Abstraction over EVM errors.
 
-use core::error::Error;
+use core::{any::Any, error::Error};
 use revm::context_interface::result::{EVMError, InvalidTransaction};
 
 /// Abstraction over transaction validation error.
-pub trait InvalidTxError: Error + Send + Sync + 'static {
+pub trait InvalidTxError: Error + Send + Sync + Any + 'static {
     /// Returns whether the error cause by transaction having a nonce lower than expected.
     fn is_nonce_too_low(&self) -> bool;
 }
