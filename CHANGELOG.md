@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.0](https://github.com/alloy-rs/evm/releases/tag/v0.15.0) - 2025-07-21
+
+### Dependencies
+
+- Bump revm 2703 ([#133](https://github.com/alloy-rs/evm/issues/133))
+
+### Features
+
+- Add Any bound and as_any method to InvalidTxError trait ([#128](https://github.com/alloy-rs/evm/issues/128))
+- Enhance precompile lookup documentation and functionality ([#137](https://github.com/alloy-rs/evm/issues/137))
+- `EvmInternals::log` ([#135](https://github.com/alloy-rs/evm/issues/135))
+- Make fusing optional in `TxTracer` ([#131](https://github.com/alloy-rs/evm/issues/131))
+- Add is_pure method to Precompile trait ([#126](https://github.com/alloy-rs/evm/issues/126))
+
+### Miscellaneous Tasks
+
+- Convert PrecompilesMap into struct ([#136](https://github.com/alloy-rs/evm/issues/136))
+- Use revm system_call ([#121](https://github.com/alloy-rs/evm/issues/121))
+- Reorder struct def ([#129](https://github.com/alloy-rs/evm/issues/129))
+
+### Performance
+
+- Allocate capacity for balance changes ([#139](https://github.com/alloy-rs/evm/issues/139))
+- Only fuse inspector once ([#134](https://github.com/alloy-rs/evm/issues/134))
+
 ## [0.14.0](https://github.com/alloy-rs/evm/releases/tag/v0.14.0) - 2025-07-03
 
 ### Dependencies
@@ -14,6 +39,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Features
 
 - Add BlockEnv to EvmInternals ([#123](https://github.com/alloy-rs/evm/issues/123))
+
+### Miscellaneous Tasks
+
+- Release 0.14.0
 
 ## [0.13.0](https://github.com/alloy-rs/evm/releases/tag/v0.13.0) - 2025-07-01
 
