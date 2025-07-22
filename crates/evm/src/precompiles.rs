@@ -343,7 +343,6 @@ where
             }
         };
 
-        eprintln!("precompile address: {:?}, result: {:?}", address, result);
         Ok(Some(result))
     }
 

@@ -85,6 +85,7 @@ pub trait Evm {
         &mut self,
         tx: impl IntoTxEnv<Self::Tx>,
     ) -> Result<ResultAndState<Self::HaltReason>, Self::Error> {
+        eprintln!("=== EVM transact called, block number: {} ===", self.block().number);
         self.transact_raw(tx.into_tx_env())
     }
 
