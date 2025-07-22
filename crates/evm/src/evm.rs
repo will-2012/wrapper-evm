@@ -12,6 +12,7 @@ use revm::{
     inspector::{JournalExt, NoOpInspector},
     DatabaseCommit, Inspector,
 };
+use alloy_primitives::U256;
 
 /// Helper trait to bound [`revm::Database::Error`] with common requirements.
 pub trait Database: revm::Database<Error: Error + Send + Sync + 'static> + Debug {}
@@ -86,7 +87,11 @@ pub trait Evm {
         tx: impl IntoTxEnv<Self::Tx>,
     ) -> Result<ResultAndState<Self::HaltReason>, Self::Error> {
         eprintln!("=== EVM transact called, block number: {} ===", self.block().number);
-        self.transact_raw(tx.into_tx_env())
+        let r = self.transact_raw(tx.into_tx_env());
+        if self.block().number == U256::from(39539205){
+            eprintln!("=== EVM transact called, result: {:?} ===", r);
+        }
+        r
     }
 
     /// Executes a system call.
