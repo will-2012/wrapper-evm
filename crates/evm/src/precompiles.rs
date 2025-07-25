@@ -312,9 +312,34 @@ where
             }
             Err(PrecompileError::Fatal(e)) => return Err(e),
             Err(e) => {
+                eprintln!("revm precompile error: {:?}", e);
                 result.result = if e.is_oog() {
+                    eprintln!("revm precompile out of gas error");
                     InstructionResult::PrecompileOOG
+                } else if let PrecompileError::Other(msg) = &e {
+                    if msg.starts_with("Reverted(") {
+                        eprintln!("revm precompile revert error: {:?}", msg);
+                        // Extract gas value from "Reverted({gas})" format
+                        if let Some(gas_str) = msg.strip_prefix("Reverted(").and_then(|s| s.strip_suffix(")")) {
+                            if let Ok(gas_used) = gas_str.parse::<u64>() {
+                                eprintln!("revm precompile revert gas_used: {:?}", gas_used);
+                                if result.gas.record_cost(gas_used) {
+                                    InstructionResult::Revert
+                                } else {
+                                    InstructionResult::PrecompileOOG
+                                }
+                            } else {
+                                panic!("Failed to parse gas value from revert error message");
+                            }
+                        } else {
+                            panic!("Failed to parse gas value from revert error message");
+                        }
+                    } else {
+                        eprintln!("revm precompile other error: {:?}", msg);
+                        InstructionResult::PrecompileError
+                    }
                 } else {
+                    eprintln!("revm precompile unknown error type");
                     InstructionResult::PrecompileError
                 };
             }
