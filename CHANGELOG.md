@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.16.0](https://github.com/alloy-rs/evm/releases/tag/v0.16.0) - 2025-07-27
+
+### Dependencies
+
+- Bump msrv ([#142](https://github.com/alloy-rs/evm/issues/142))
+- Bump revm2710 ([#141](https://github.com/alloy-rs/evm/issues/141))
+
+### Features
+
+- Add as_invalid_tx_err in InvalidTxError ([#143](https://github.com/alloy-rs/evm/issues/143))
+
 ## [0.15.0](https://github.com/alloy-rs/evm/releases/tag/v0.15.0) - 2025-07-21
 
 ### Dependencies
@@ -21,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Miscellaneous Tasks
 
+- Release 0.15.0
 - Convert PrecompilesMap into struct ([#136](https://github.com/alloy-rs/evm/issues/136))
 - Use revm system_call ([#121](https://github.com/alloy-rs/evm/issues/121))
 - Reorder struct def ([#129](https://github.com/alloy-rs/evm/issues/129))
